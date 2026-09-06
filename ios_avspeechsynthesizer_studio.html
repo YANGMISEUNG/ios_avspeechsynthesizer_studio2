@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS AVSpeechSynthesizer Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Highlight word animation */
+        .highlight-word {
+            background-color: #3b82f6;
+            color: #ffffff;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.1s ease;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Navigation Bar -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid fa-waveform fa-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">AVSpeechSynthesizer Lab</h1>
+                    <p class="text-xs text-slate-400">iOS AVFoundation Text-to-Speech Interactive Studio</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <i class="fa-brands fa-apple mr-1"></i> iOS AVFoundation
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Side: Interactive iPhone Mockup & Controls -->
+        <section class="lg:col-span-5 flex flex-col items-center">
+            <!-- Mobile Device Mockup Container -->
+            <div class="w-full max-w-[380px] bg-slate-950 border-4 border-slate-800 rounded-[48px] p-4 shadow-2xl relative shadow-blue-950/40 flex flex-col h-[720px]">
+                
+                <!-- Dynamic Island / Speaker Notch -->
+                <div class="w-28 h-6 bg-black rounded-full mx-auto mb-3 flex items-center justify-end px-2 gap-1.5 border border-slate-800/80">
+                    <div class="w-2.5 h-2.5 rounded-full bg-blue-950/80 border border-blue-800/50"></div>
+                    <div class="w-2 h-2 rounded-full bg-slate-800"></div>
+                </div>
+
+                <!-- iOS App Interface inside Mockup -->
+                <div class="flex-1 bg-slate-900 rounded-[32px] p-4 flex flex-col justify-between overflow-hidden border border-slate-800/50">
+                    
+                    <!-- App Top Bar -->
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-3 px-1">
+                            <span class="font-semibold text-slate-200"><i class="fa-solid fa-volume-high text-blue-400 mr-1"></i> Quick TTS Reader</span>
+                            <span id="voiceBadge" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px]">ko-KR</span>
+                        </div>
+
+                        <!-- Speech Utterance Text Input / Display Area -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 min-h-[180px] max-h-[220px] overflow-y-auto mb-4 text-sm leading-relaxed relative">
+                            <label class="block text-[10px] text-slate-500 font-semibold mb-1 uppercase tracking-wider">AVSpeechUtterance Content</label>
+                            <div id="utteranceDisplay" class="text-slate-200 whitespace-pre-wrap font-medium">미술학습지는 최근 감성교육의 붐을 타고 만 2세 유아부터 중학생까지를 대상으로 일주일에 한번 회원의 집을 방문, 일대일 및 소그룹으로 수업을 진행하는 개인레슨 형식과 집에서 학습지만 받아 엄마와 아이가 함께 해볼 수 있는 두 가지 형태가 있다.</div>
+                        </div>
+
+                        <!-- Editable Text Area Trigger -->
+                        <div class="mb-4">
+                            <button onclick="toggleTextEdit()" class="w-full text-xs text-blue-400 hover:text-blue-300 flex items-center justify-center gap-1.5 py-1 bg-blue-950/30 rounded-lg border border-blue-900/40">
+                                <i class="fa-solid fa-pen-to-square"></i> <span>텍스트 수정하기</span>
+                            </button>
+                            <textarea id="textInput" class="hidden w-full mt-2 bg-slate-950 border border-blue-500/50 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 h-24 resize-none" placeholder="읽어줄 텍스트를 입력하세요..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Speech Parameters Controls -->
+                    <div class="space-y-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800/60">
+                        <!-- Rate (Speed) Slider -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-400">속도 (rate)</span>
+                                <span id="rateVal" class="text-blue-400 font-mono font-bold">0.50</span>
+                            </div>
+                            <input type="range" id="rateSlider" min="0.1" max="1.0" step="0.05" value="0.5" class="w-full accent-blue-500 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-[10px] text-slate-600 mt-0.5">
+                                <span>AVSpeechUtteranceMinimumSpeechRate</span>
+                                <span>Default (0.5)</span>
+                            </div>
+                        </div>
+
+                        <!-- Pitch Slider -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-400">음높이 (pitchMultiplier)</span>
+                                <span id="pitchVal" class="text-blue-400 font-mono font-bold">1.00</span>
+                            </div>
+                            <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full accent-blue-500 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <!-- Language Selector -->
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">음성 언어 (AVSpeechSynthesisVoice)</label>
+                            <select id="voiceSelect" class="w-full bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-blue-500">
+                                <!-- Dynamically populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Audio Controls Area -->
+                    <div class="pt-2">
+                        <div class="flex items-center justify-center gap-3">
+                            <button id="stopBtn" onclick="stopSpeech()" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-full flex items-center justify-center transition">
+                                <i class="fa-solid fa-stop"></i>
+                            </button>
+                            <button id="playBtn" onclick="togglePlayPause()" class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400 active:scale-95 text-white rounded-full flex items-center justify-center text-xl shadow-lg shadow-blue-600/40 transition">
+                                <i id="playIcon" class="fa-solid fa-play ml-0.5"></i>
+                            </button>
+                            <button id="resetBtn" onclick="resetText()" class="w-10 h-10 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 rounded-full flex items-center justify-center transition" title="텍스트 초기화">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Home Bar Indicator -->
+                <div class="w-32 h-1 bg-slate-700 rounded-full mx-auto mt-2"></div>
+            </div>
+        </section>
+
+        <!-- Right Side: Code & Technical Architecture Guide -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Navigation Tabs -->
+            <div class="flex border-b border-slate-800 gap-4">
+                <button onclick="switchTab('swift')" id="tabBtn-swift" class="pb-3 text-sm font-semibold text-blue-400 border-b-2 border-blue-500 flex items-center gap-2">
+                    <i class="fa-solid fa-code"></i> SwiftUI 완전 코드
+                </button>
+                <button onclick="switchTab('arch')" id="tabBtn-arch" class="pb-3 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-cubes"></i> 핵심 개념 & 모범 사례
+                </button>
+            </div>
+
+            <!-- Tab Content 1: SwiftUI Source Code -->
+            <div id="tab-swift" class="space-y-4 flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-400">iOS에서 실행 가능한 복사-붙여넣기 완벽 지원 SwiftUI 코드입니다.</span>
+                    <button onclick="copySwiftCode()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 rounded-lg flex items-center gap-1.5 border border-slate-700 transition">
+                        <i class="fa-regular fa-copy"></i> <span id="copyBtnText">코드 복사</span>
+                    </button>
+                </div>
+
+                <!-- Code Container -->
+                <div class="bg-slate-950 rounded-2xl border border-slate-800 p-4 overflow-x-auto relative text-xs font-mono leading-relaxed text-slate-300 max-h-[600px] overflow-y-auto">
+<pre id="swiftCodeBlock"><code class="language-swift"><span class="text-purple-400">import</span> SwiftUI
+<span class="text-purple-400">import</span> AVFoundation
+
+<span class="text-slate-500">// MARK: - 1. AVSpeechSynthesizer 매니저 클래스</span>
+<span class="text-purple-400">final class</span> <span class="text-yellow-300">SpeechManager</span>: <span class="text-yellow-300">NSObject</span>, <span class="text-yellow-300">ObservableObject</span>, <span class="text-yellow-300">AVSpeechSynthesizerDelegate</span> {
+    <span class="text-purple-400">private let</span> synthesizer = <span class="text-yellow-300">AVSpeechSynthesizer</span>()
+    
+    <span class="text-purple-400">@Published var</span> isSpeaking = <span class="text-red-400">false</span>
+    <span class="text-purple-400">@Published var</span> isPaused = <span class="text-red-400">false</span>
+    <span class="text-purple-400">@Published var</span> spokenRange: <span class="text-yellow-300">NSRange</span>?
+    
+    <span class="text-purple-400">override init</span>() {
+        <span class="text-purple-400">super</span>.<span class="text-blue-300">init</span>()
+        synthesizer.delegate = <span class="text-purple-400">self</span>
+        <span class="text-blue-300">setupAudioSession</span>()
+    }
+    
+    <span class="text-slate-500">// 백그라운드 및 타 음소거 설정 중 오디오 재생 허용</span>
+    <span class="text-purple-400">private func</span> <span class="text-blue-300">setupAudioSession</span>() {
+        <span class="text-purple-400">do</span> {
+            <span class="text-purple-400">try</span> <span class="text-yellow-300">AVAudioSession</span>.sharedInstance().<span class="text-blue-300">setCategory</span>(.playback, mode: .default)
+            <span class="text-purple-400">try</span> <span class="text-yellow-300">AVAudioSession</span>.sharedInstance().<span class="text-blue-300">setActive</span>(<span class="text-red-400">true</span>)
+        } <span class="text-purple-400">catch</span> {
+            <span class="text-blue-300">print</span>(<span class="text-green-300">"오디오 세션 설정 실패: \(error)"</span>)
+        }
+    }
+    
+    <span class="text-purple-400">func</span> <span class="text-blue-300">speak</span>(text: <span class="text-yellow-300">String</span>, language: <span class="text-yellow-300">String</span> = <span class="text-green-300">"ko-KR"</span>, rate: <span class="text-yellow-300">Float</span> = <span class="text-yellow-300">AVSpeechUtteranceDefaultSpeechRate</span>, pitch: <span class="text-yellow-300">Float</span> = <span class="text-emerald-400">1.0</span>) {
+        <span class="text-purple-400">if</span> synthesizer.isPaused {
+            synthesizer.<span class="text-blue-300">continueSpeaking</span>()
+            isPaused = <span class="text-red-400">false</span>
+            isSpeaking = <span class="text-red-400">true</span>
+            <span class="text-purple-400">return</span>
+        }
+        
+        <span class="text-purple-400">if</span> synthesizer.isSpeaking {
+            synthesizer.<span class="text-blue-300">stopSpeaking</span>(at: .immediate)
+        }
+        
+        <span class="text-purple-400">let</span> utterance = <span class="text-yellow-300">AVSpeechUtterance</span>(string: text)
+        utterance.voice = <span class="text-yellow-300">AVSpeechSynthesisVoice</span>(language: language)
+        utterance.rate = rate
+        utterance.pitchMultiplier = pitch
+        
+        synthesizer.<span class="text-blue-300">speak</span>(utterance)
+        isSpeaking = <span class="text-red-400">true</span>
+        isPaused = <span class="text-red-400">false</span>
+    }
+    
+    <span class="text-purple-400">func</span> <span class="text-blue-300">pause</span>() {
+        synthesizer.<span class="text-blue-300">pauseSpeaking</span>(at: .immediate)
+        isPaused = <span class="text-red-400">true</span>
+        isSpeaking = <span class="text-red-400">false</span>
+    }
+    
+    <span class="text-purple-400">func</span> <span class="text-blue-300">stop</span>() {
+        synthesizer.<span class="text-blue-300">stopSpeaking</span>(at: .immediate)
+        isSpeaking = <span class="text-red-400">false</span>
+        isPaused = <span class="text-red-400">false</span>
+        spokenRange = <span class="text-purple-400">nil</span>
+    }
+    
+    <span class="text-slate-500">// MARK: - AVSpeechSynthesizerDelegate (실시간 단어 하이라이팅)</span>
+    <span class="text-purple-400">func</span> <span class="text-blue-300">speechSynthesizer</span>(_ synthesizer: <span class="text-yellow-300">AVSpeechSynthesizer</span>, didSpeakRange characterRange: <span class="text-yellow-300">NSRange</span>, utterance: <span class="text-yellow-300">AVSpeechUtterance</span>) {
+        <span class="text-yellow-300">DispatchQueue</span>.main.<span class="text-blue-300">async</span> {
+            <span class="text-purple-400">self</span>.spokenRange = characterRange
+        }
+    }
+    
+    <span class="text-purple-400">func</span> <span class="text-blue-300">speechSynthesizer</span>(_ synthesizer: <span class="text-yellow-300">AVSpeechSynthesizer</span>, didFinish utterance: <span class="text-yellow-300">AVSpeechUtterance</span>) {
+        <span class="text-yellow-300">DispatchQueue</span>.main.<span class="text-blue-300">async</span> {
+            <span class="text-purple-400">self</span>.isSpeaking = <span class="text-red-400">false</span>
+            <span class="text-purple-400">self</span>.isPaused = <span class="text-red-400">false</span>
+            <span class="text-purple-400">self</span>.spokenRange = <span class="text-purple-400">nil</span>
+        }
+    }
+}
+
+<span class="text-slate-500">// MARK: - 2. SwiftUI 메인 뷰</span>
+<span class="text-purple-400">struct</span> <span class="text-yellow-300">ContentView</span>: <span class="text-yellow-300">View</span> {
+    <span class="text-purple-400">@StateObject private var</span> speechManager = <span class="text-yellow-300">SpeechManager</span>()
+    <span class="text-purple-400">@State private var</span> text = <span class="text-green-300">"미술학습지는 최근 감성교육의 붐을 타고 만 2세 유아부터 중학생까지를 대상으로..."</span>
+    <span class="text-purple-400">@State private var</span> rate: <span class="text-yellow-300">Float</span> = <span class="text-yellow-300">AVSpeechUtteranceDefaultSpeechRate</span>
+    
+    <span class="text-purple-400">var body</span>: <span class="text-purple-400">some</span> <span class="text-yellow-300">View</span> {
+        <span class="text-yellow-300">VStack</span>(spacing: <span class="text-emerald-400">20</span>) {
+            <span class="text-yellow-300">TextEditor</span>(text: $text)
+                .
